@@ -6,19 +6,64 @@
   <title>Voting DApp</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 2rem; background: #0f0f0f; color: white; }
-    button { padding: 1rem 2rem; margin: 1rem; font-size: 1rem; border-radius: 6px; border: none; cursor: pointer; }
-    .yes { background-color: #28a745; color: white; }
-    .no { background-color: #dc3545; color: white; }
-    .result { margin-top: 2rem; font-size: 1.2rem; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0d1117;
+      color: #c9d1d9;
+      text-align: center;
+      padding: 3rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #58a6ff;
+    }
+    h2 {
+      font-size: 1.2rem;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 1rem 2rem;
+      margin: 1rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    #connect {
+      background-color: #30363d;
+      color: white;
+    }
+    #connect:hover {
+      background-color: #21262d;
+    }
+    .yes {
+      background-color: #238636;
+      color: white;
+    }
+    .yes:hover {
+      background-color: #2ea043;
+    }
+    .no {
+      background-color: #da3633;
+      color: white;
+    }
+    .no:hover {
+      background-color: #f85149;
+    }
+    .result {
+      margin-top: 2rem;
+      font-size: 1.4rem;
+      color: #f0f6fc;
+    }
   </style>
 </head>
 <body>
   <h1>🗳️ Sepolia Voting DApp</h1>
-  <h2>🧪 Version: 2.1.1 - May 15, 2025</h2> <!-- moved here! -->
-
-  <p id="status">Connect your wallet to vote</p>
-  <button id="connect">🔌 Connect Wallet</button><br/>
+  <h2>📅 Version: 2.1 – May 15, 2025</h2>
+  <p id="status">🔌 Connect your wallet to vote</p>
+  <button id="connect">Connect Wallet</button><br />
   <button class="yes" id="voteYes">Vote YES</button>
   <button class="no" id="voteNo">Vote NO</button>
   <div class="result" id="results">Loading results...</div>
@@ -34,42 +79,51 @@
     let provider, signer, contract;
 
     async function connectWallet() {
-      if (!window.ethereum) {
-        alert("Install MetaMask first!");
-        return;
-      }
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      try {
+        if (!window.ethereum) {
+          alert("Please install MetaMask!");
+          return;
+        }
 
-      const addr = await signer.getAddress();
-      document.getElementById("status").innerText = `Connected: ${addr}`;
-      loadResults();
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+        const address = await signer.getAddress();
+        document.getElementById("status").innerText = `🟢 Connected: ${address}`;
+        loadResults();
+      } catch (err) {
+        console.error("Wallet connection failed:", err);
+        alert("Failed to connect wallet.");
+      }
     }
 
     async function vote(voteYes) {
       try {
-        const addr = await signer.getAddress();
-        const alreadyVoted = await contract.hasVoted(addr);
-        if (alreadyVoted) return alert("❌ You've already voted!");
+        const address = await signer.getAddress();
+        const alreadyVoted = await contract.hasVoted(address);
+        if (alreadyVoted) {
+          alert("❌ You’ve already voted!");
+          return;
+        }
 
         const tx = await contract.vote(voteYes);
         await tx.wait();
         alert("✅ Vote submitted!");
         loadResults();
       } catch (err) {
-        console.error(err);
-        alert("Transaction failed");
+        console.error("Vote failed:", err);
+        alert("❌ Transaction failed. See console for details.");
       }
     }
 
     async function loadResults() {
       try {
         const [yes, no] = await contract.getResults();
-        document.getElementById("results").innerText = `✅ Yes: ${yes} | ❌ No: ${no}`;
+        document.getElementById("results").innerText = `✅ Yes: ${yes.toString()} | ❌ No: ${no.toString()}`;
       } catch (err) {
-        console.error(err);  // log error to browser
+        console.error("Failed to load results:", err);
         document.getElementById("results").innerText = "Failed to load results.";
       }
     }
@@ -78,6 +132,7 @@
     document.getElementById("voteYes").onclick = () => vote(true);
     document.getElementById("voteNo").onclick = () => vote(false);
 
+    // Initial load
     loadResults();
   </script>
 </body>
