@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<h2>🧪 Version: 2.1 - May 15, 2025</h2>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,6 +15,8 @@
 </head>
 <body>
   <h1>🗳️ Sepolia Voting DApp</h1>
+  <h2>🧪 Version: 2.1 - May 15, 2025</h2> <!-- moved here! -->
+
   <p id="status">Connect your wallet to vote</p>
   <button id="connect">🔌 Connect Wallet</button><br/>
   <button class="yes" id="voteYes">Vote YES</button>
@@ -68,6 +69,7 @@
         const [yes, no] = await contract.getResults();
         document.getElementById("results").innerText = `✅ Yes: ${yes} | ❌ No: ${no}`;
       } catch (err) {
+        console.error(err);  // log error to browser
         document.getElementById("results").innerText = "Failed to load results.";
       }
     }
