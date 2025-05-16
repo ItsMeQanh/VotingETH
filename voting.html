@@ -61,7 +61,7 @@
 </head>
 <body>
   <h1>🗳️ Sepolia Voting DApp</h1>
-  <h2>📅 Version: 2.1.3 – May 16, 2025</h2>
+  <h2>📅 Version: 2.1.4 – May 16, 2025</h2>
   <p id="status">🔌 Connect your wallet to vote</p>
   <button id="connect">Connect Wallet</button><br />
   <button class="yes" id="voteYes">Vote YES</button>
@@ -69,7 +69,7 @@
   <div class="result" id="results">Loading results...</div>
 
   <script>
-    const CONTRACT_ADDRESS = "0xd030CeE7f43d0d044062EbD7B2c80B2CE5148B33";
+    const CONTRACT_ADDRESS = "0xD12DBac4f9fAa493A07C7Aa9D8DE0eDDDa4B6b52";
     const ABI = [
       "function vote(bool _voteYes) public",
       "function getResults() public view returns (uint yes, uint no)",
