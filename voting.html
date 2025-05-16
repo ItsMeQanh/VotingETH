@@ -102,7 +102,7 @@
     async function vote(voteYes) {
       try {
         const address = await signer.getAddress();
-        const alreadyVoted = await contract.hasVoted(address);
+        const alreadyVoted = await contract.hasVotedAddress(address);
         if (alreadyVoted) {
           alert("❌ You’ve already voted!");
           return;
