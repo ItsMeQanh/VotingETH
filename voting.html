@@ -61,7 +61,7 @@
 </head>
 <body>
   <h1>🗳️ Sepolia Voting DApp</h1>
-  <h2>📅 Version: 2.1.5 – May 17, 2025</h2>
+  <h2>📅 Version: 2.1.6 – May 17, 2025</h2>
   <p id="status">🔌 Connect your wallet to vote</p>
   <button id="connect">Connect Wallet</button><br />
   <button class="yes" id="voteYes">Vote YES</button>
@@ -85,10 +85,13 @@
           return;
         }
 
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+provider = new ethers.providers.Web3Provider(window.ethereum);
+await provider.send("eth_requestAccounts", []);
+signer = provider.getSigner();
+
+const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider); // 👈 NEW LINE
+contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer); // 👈 This one stays
+
 
         const address = await signer.getAddress();
         document.getElementById("status").innerText = `🟢 Connected: ${address}`;
@@ -102,7 +105,7 @@
     async function vote(voteYes) {
       try {
         const address = await signer.getAddress();
-        const alreadyVoted = await contract.hasVotedAddress(address);
+        const alreadyVoted = await readContract.hasVotedAddress(address);
         if (alreadyVoted) {
           alert("❌ You’ve already voted!");
           return;
@@ -120,7 +123,7 @@
 
     async function loadResults() {
       try {
-        const [yes, no] = await contract.getResults();
+        const [yes, no] = await readContract.getResults();
         document.getElementById("results").innerText = `✅ Yes: ${yes.toString()} | ❌ No: ${no.toString()}`;
       } catch (err) {
         console.error("Failed to load results:", err);
