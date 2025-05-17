@@ -13,15 +13,8 @@
       text-align: center;
       padding: 3rem;
     }
-    h1 {
-      font-size: 2.5rem;
-      color: #58a6ff;
-    }
-    h2 {
-      font-size: 1.2rem;
-      color: #8b949e;
-      margin-bottom: 1rem;
-    }
+    h1 { font-size: 2.5rem; color: #58a6ff; }
+    h2 { font-size: 1.2rem; color: #8b949e; margin-bottom: 1rem; }
     button {
       padding: 1rem 2rem;
       margin: 1rem;
@@ -31,45 +24,26 @@
       cursor: pointer;
       transition: all 0.2s ease-in-out;
     }
-    #connect {
-      background-color: #30363d;
-      color: white;
-    }
-    #connect:hover {
-      background-color: #21262d;
-    }
-    .yes {
-      background-color: #238636;
-      color: white;
-    }
-    .yes:hover {
-      background-color: #2ea043;
-    }
-    .no {
-      background-color: #da3633;
-      color: white;
-    }
-    .no:hover {
-      background-color: #f85149;
-    }
-    .result {
-      margin-top: 2rem;
-      font-size: 1.4rem;
-      color: #f0f6fc;
-    }
+    #connect { background-color: #30363d; color: white; }
+    #connect:hover { background-color: #21262d; }
+    .yes { background-color: #238636; color: white; }
+    .yes:hover { background-color: #2ea043; }
+    .no { background-color: #da3633; color: white; }
+    .no:hover { background-color: #f85149; }
+    .result { margin-top: 2rem; font-size: 1.4rem; color: #f0f6fc; }
   </style>
 </head>
 <body>
   <h1>🗳️ Sepolia Voting DApp</h1>
-  <h2>📅 Version: 2.1.7 – May 17, 2025</h2>
+  <h2>📅 Version: 2.1.8 – May 17, 2025</h2>
   <p id="status">🔌 Connect your wallet to vote</p>
   <button id="connect">Connect Wallet</button><br />
   <button class="yes" id="voteYes">Vote YES</button>
   <button class="no" id="voteNo">Vote NO</button>
-  <div class="result" id="results">Loading results...</div>
+  <div class="result" id="results">Waiting for wallet connection...</div>
 
   <script>
-    const CONTRACT_ADDRESS = "0xd12dbac4f9faa493a07c7aa9d8de0eddda4b6b52";
+    const CONTRACT_ADDRESS = "0xd12dbac4f9faa493a07c7aa9d8de0eddda4b6b52"; // ← Replace with your lowercase deployed address
     const ABI = [
       "function vote(bool _voteYes) public",
       "function getResults() public view returns (uint yes, uint no)",
@@ -85,20 +59,21 @@
           return;
         }
 
-provider = new ethers.providers.Web3Provider(window.ethereum);
-await provider.send("eth_requestAccounts", []);
-signer = provider.getSigner();
+        provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
 
-const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider); // 👈 NEW LINE
-contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer); // 👈 This one stays
-
+        // Initialize contracts
+        readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
         const address = await signer.getAddress();
         document.getElementById("status").innerText = `🟢 Connected: ${address}`;
+
         loadResults();
       } catch (err) {
         console.error("Wallet connection failed:", err);
-        alert("Failed to connect wallet.");
+        alert("❌ Wallet connection failed.");
       }
     }
 
@@ -117,26 +92,35 @@ contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer); // 👈 This one 
         loadResults();
       } catch (err) {
         console.error("Vote failed:", err);
-        alert("❌ Transaction failed. See console for details.");
+        alert("❌ Vote failed. See console.");
       }
     }
 
     async function loadResults() {
       try {
+        if (!readContract) throw new Error("Contract not connected.");
         const [yes, no] = await readContract.getResults();
-        document.getElementById("results").innerText = `✅ Yes: ${yes.toString()} | ❌ No: ${no.toString()}`;
+        document.getElementById("results").innerText = `✅ Yes: ${yes} | ❌ No: ${no}`;
       } catch (err) {
         console.error("Failed to load results:", err);
         document.getElementById("results").innerText = "Failed to load results.";
       }
     }
 
+    // Handle user wallet switching in MetaMask
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", async (accounts) => {
+        if (accounts.length > 0) {
+          await connectWallet(); // reconnect on account change
+        } else {
+          document.getElementById("status").innerText = "🔌 Wallet disconnected";
+        }
+      });
+    }
+
     document.getElementById("connect").onclick = connectWallet;
     document.getElementById("voteYes").onclick = () => vote(true);
     document.getElementById("voteNo").onclick = () => vote(false);
-
-    // Initial load
-    loadResults();
   </script>
 </body>
 </html>
